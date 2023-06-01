@@ -82,8 +82,7 @@ def instantSetup(mch, mod):
     #sys.setrecursionlimit(10**5)
     mch.FTransition()
     if mod[0] == '-r':
-        w = " ".join(mch.tape)
-        w = w.replace(" ", "")
+        w = "".join(mch.tape)
         print("\nTape: " + w)
     elif mod[0] == '-v':
         mch.showOut(-1)
