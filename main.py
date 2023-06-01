@@ -1,9 +1,7 @@
 # programa NÃO suportará erros do usuário;
 import re
 import sys
-
 import MT
-import View
 
 
 """

@@ -1,18 +1,18 @@
-import sys
-
 from colorama import Fore, Back, Style
-
 
 """
 " Classe que representa a Máquina de Turing e suas
 " funções para controlá-la.
 """
+
+
 class MTuring:
     """
     " Função responsável por iniciar a máquina de Turing.
     " @:param None.
     " @:return None.
     """
+
     def __init__(self):
         self.tape = list()
         self.tapehead = int()
@@ -32,6 +32,7 @@ class MTuring:
     " @:param Nome do bloco.
     " @:return Boolean(sucesso/falha).
     """
+
     def criaBloco(self, bloco):
         bloco = str(bloco)
         if bloco in self.blocos:
@@ -44,6 +45,7 @@ class MTuring:
     " @:param Transição.
     " @:return None.
     """
+
     def criaTransicao(self, x):
         x = tuple(x)
         #  [ e  ,  a ] = ( b  , d ,  e' ) --> ( e , a , b , d , e' )
@@ -54,6 +56,7 @@ class MTuring:
     " @:param None.
     " @:return None.
     """
+
     def limpaTransicoes(self):
         self.transicoes.clear()
 
@@ -62,6 +65,7 @@ class MTuring:
     " @:param None.
     " @:return None.
     """
+
     def clear(self):
         self.Output.clear()
         self.blocos.clear()
@@ -69,28 +73,51 @@ class MTuring:
         self.prevsBloc.clear()
 
     """
+    " Função responsável por limpar a lista de estados anteriores até a marca
+    " de mudança de bloco (#).
+    " @:param None.
+    " @:return None.
+    """
+    def remove_items(self):
+        while len(self.prevsState) > 0 and self.prevsState[len(self.prevsState) - 1] != '#':
+            self.prevsState.pop()
+        if len(self.prevsState) > 0 and self.prevsState[len(self.prevsState) - 1] == '#':
+            self.prevsState.pop()
+
+    """
     " Função responsável por realizar a defição de cada transição, podendo ser:
     " mudança de bloco, palavra reservada, ou transição entre estados.
     " @:param Trasição.
     " @:return None.
     """
+
     def Bloc(self, trans):
         self.insertBlocList(self.tape, self.tapehead)
+        if self.check is not None and self.check not in self.prevsBloc:
+            self.estadoAtual = None
+            self.prevsBloc.clear()
+            self.prevsState.clear()
+            return
         if len(trans) == 3:  # encontrou uma mudança de bloco.
             if trans[2] == self.keywords[1]:  # encontrou o pare.
                 self.check = trans[1]
-                self.aux = self.prevsState[len(self.prevsState) - 1]
+                self.prevsState.append(trans[0])
+                self.aux = self.prevsState[-1]
                 self.estadoAtual = '01'
                 self.prevsBloc.append(trans[1])
-                self.blocoAtual = self.prevsBloc[len(self.prevsBloc) - 1]
+                self.blocoAtual = self.prevsBloc[-1]
+                self.prevsState.append('#')
                 self.FTransition()
             else:
                 self.estadoAtual = '01'
-                self.aux = trans[2]
+                self.prevsState.append(trans[2])
+                self.aux = self.prevsState[-1]
                 self.blocoAtual = trans[1]
+                self.prevsState.append('#')
                 self.FTransition()
         else:
             if trans[5] == self.keywords[0]:  # encontrou o retorne.
+                self.estadoAtual = self.prevsState[-1]
                 self.FTransition()
             else:
                 self.FTransition()
@@ -100,29 +127,36 @@ class MTuring:
     " @:param None.
     " @:return None.
     """
-    def FTransition(self):
-        if self.blocoAtual not in self.prevsBloc:
-            self.prevsBloc.append(self.blocoAtual)
-        self.prevsState.append(self.estadoAtual)
 
+    def FTransition(self):
+        #INSERE BLOCO NA LISTA DE ANTERIORES
+        if len(self.prevsBloc) == 0:
+            self.prevsBloc.append(self.blocoAtual)
+        elif self.blocoAtual != self.prevsBloc[-1]:
+            self.prevsBloc.append(self.blocoAtual)
+        #INSERE ESTADO NA LISTA DE ANTERIORES
+        if len(self.prevsState) > 0 and self.estadoAtual != self.prevsState[-1]:
+            self.prevsState.append(self.estadoAtual)
         self.insertBlocList(self.tape, self.tapehead)
+        #PERCORRE O BLOCO ATUAL PARA ACHAR A TRANSIÇÃO
         for x in self.blocos[self.blocoAtual]:
             if self.check is not None and self.check not in self.prevsBloc:
                 self.estadoAtual = None
                 self.prevsBloc.clear()
                 self.prevsState.clear()
                 break
+
             if len(x) == 3 and x[0] == self.estadoAtual:
                 self.Bloc(x)
             if x[0] == self.estadoAtual:
                 if self.tapehead < 0 or self.tapehead >= len(self.tape):
                     self.swInTape(x)  # altera na fita
                     self.moveTapeH(x)  # move cabeçote
-                    if x[5] == self.keywords[0]:
+                    if x[5] == self.keywords[0]: #RETORNA
                         self.estadoAtual = self.aux
+                        self.remove_items()
                         self.prevsBloc.pop()
-                        self.prevsState.pop()
-                        self.blocoAtual = self.prevsBloc[len(self.prevsBloc) - 1]
+                        self.blocoAtual = self.prevsBloc[-1]
                     else:
                         self.prevsState.append(x[0])
                         self.estadoAtual = x[5]
@@ -130,12 +164,12 @@ class MTuring:
                 elif x[1] == self.tape[self.tapehead] or x[1] == '*':
                     self.swInTape(x)  # altera na fita
                     self.moveTapeH(x)  # move cabeçote
-                    if x[5] == self.keywords[0]:
+                    if x[5] == self.keywords[0]: #RETORNA
                         self.estadoAtual = self.aux
                         if len(self.prevsBloc) > 1:
                             self.prevsBloc.remove(self.blocoAtual)
-                        self.prevsState.pop()
-                        self.blocoAtual = self.prevsBloc[len(self.prevsBloc) - 1]
+                        self.remove_items()
+                        self.blocoAtual = self.prevsBloc[-1]
                         self.Bloc(x)
                     else:
                         self.prevsState.append(x[0])
@@ -144,12 +178,12 @@ class MTuring:
         if self.proxTrans() is not None:
             self.Bloc(self.proxTrans())
 
-
     """
     " Função responsável por detectar a próxima transição.
     " @:param None.
     " @:return None.
     """
+
     def proxTrans(self):
         for x in self.blocos[self.blocoAtual]:
             if len(x) == 3 and x[0] == self.estadoAtual:
@@ -165,6 +199,7 @@ class MTuring:
     " @:param Transição.
     " @:return None.
     """
+
     def swInTape(self, trans):  # altera na fita
         if trans[3] == '*':
             if self.tapehead < 0:
@@ -196,11 +231,14 @@ class MTuring:
     " @:param Fita, cabeçote.
     " @:return None.
     """
+
     def insertBlocList(self, tape, tapehead):
         w = " ".join(tape)
         w = w.replace(" ", "")
         y = (self.blocoAtual, self.estadoAtual, w, tapehead)
-        if w not in self.Output:
+        if len(self.Output) == 0:
+            self.Output.append(y)
+        elif y != self.Output[-1]:
             self.Output.append(y)
 
     """
@@ -208,6 +246,7 @@ class MTuring:
     " @:param Transição.
     " @:return None.
     """
+
     def moveTapeH(self, trans):
         if trans[4] == 'i':
             pass
@@ -222,6 +261,7 @@ class MTuring:
     " @:param Número de transições que serão mostradas..
     " @:return None.
     """
+
     def showOut(self, n):
         n = int(n)
         count = int()
@@ -272,6 +312,7 @@ Nº      Bloco                 Estado Atual            Fita
     " @:param None.
     " @:return None.
     """
+
     def showUOp(self):
         for bloc, trans in self.blocos.items():
             print(f'Bloco: {bloc} -> {trans}')
@@ -281,5 +322,6 @@ Nº      Bloco                 Estado Atual            Fita
     " @:param None.
     " @:return None.
     """
+
     def msgIn(self):
         self.tape = list(input("Forneça a palavra inicial: "))
