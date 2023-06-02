@@ -22,7 +22,7 @@ def msgFile():
 """
 def msgHead():
     print("\t\t\tSimulador de Máquina de Turing ver 1.0 - IFMG 2023.\n"
-          "\tDesenvolvido como trabalho prático para a diciplina de Teoria da Computação.\n"
+          "\tDesenvolvido como trabalho prático para a disciplina de Teoria da Computação.\n"
           "\tAutor: Lucas de Oliveira Souza Barbosa.\n")
 
 
