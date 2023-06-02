@@ -52,22 +52,27 @@ def doAll():
 " @:return máquina de Turing preenchida.
 """
 def execFile(mch, mod):
-    mch.limpaTransicoes()
+    mch.clearListTransitions()
     bloco = ''
     with open(mod, "r") as reader:
         for line in reader:
             x = line.split()
-            if re.search(r'bloco', line.strip()):  # detecta blocos.
+            #DETECTA BLOCOS
+            if re.search(r'bloco', line.strip()):
                 bloco = x[1]
-            elif re.search(r'^;', line.strip()):  # detecta comentários.
+            #DETECTA COMENTÁRIOS
+            elif re.search(r'^;', line.strip()):
                 continue
-            elif re.search(r'\d*\s.\s--\s.\s.\s\d*', line.strip()):  # detecta transições.
-                mch.criaTransicao(tuple(x))
-            elif re.search(r'fim\s;\s\d*', line.strip()):  # detecta fechamento do bloco.
-                mch.criaBloco(bloco)
-                mch.limpaTransicoes()
-            elif re.search(r'\W*\s\D*\s\W*', line.strip()):  # detecta mudança de bloco.
-                mch.criaTransicao(tuple(x))
+            #DETECTA TRANSIÇÕES
+            elif re.search(r'\d*\s.\s--\s.\s.\s\d*', line.strip()):
+                mch.setTransition(tuple(x))
+            #DETECTA FECHAMENTO DO BLOCO
+            elif re.search(r'fim\s;\s\d*', line.strip()):
+                mch.setBloc(bloco)
+                mch.clearListTransitions()
+            #DETECTA MUDANÇA DE BLOCO
+            elif re.search(r'\W*\s\D*\s\W*', line.strip()):
+                mch.setTransition(tuple(x))
     return mch
 
 

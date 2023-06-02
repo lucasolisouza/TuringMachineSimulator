@@ -20,11 +20,11 @@ class MTuring:
         self.check = None
         self.prevsState = list()
         self.prevsBloc = list()
-        self.estadoAtual = '01'
-        self.blocoAtual = 'main'
+        self.current_state = '01'
+        self.current_bloc = 'main'
         self.keywords = ('retorne', 'pare')
-        self.transicoes = list()
-        self.blocos = dict()
+        self.transitions = list()
+        self.blocs = dict()
         self.Output = list()
 
     """
@@ -33,11 +33,11 @@ class MTuring:
     " @:return Boolean(sucesso/falha).
     """
 
-    def criaBloco(self, bloco):
+    def setBloc(self, bloco):
         bloco = str(bloco)
-        if bloco in self.blocos:
+        if bloco in self.blocs:
             return False
-        self.blocos[bloco] = list(self.transicoes)
+        self.blocs[bloco] = list(self.transitions)
         return True
 
     """
@@ -46,10 +46,10 @@ class MTuring:
     " @:return None.
     """
 
-    def criaTransicao(self, x):
+    def setTransition(self, x):
         x = tuple(x)
         #  [ e  ,  a ] = ( b  , d ,  e' ) --> ( e , a , b , d , e' )
-        self.transicoes.append(x)
+        self.transitions.append(x)
 
     """
     " Função responsável por limpar a lista de transições.
@@ -57,8 +57,8 @@ class MTuring:
     " @:return None.
     """
 
-    def limpaTransicoes(self):
-        self.transicoes.clear()
+    def clearListTransitions(self):
+        self.transitions.clear()
 
     """
     " Função responsável por limpar a máquina de Turing.
@@ -68,7 +68,7 @@ class MTuring:
 
     def clear(self):
         self.Output.clear()
-        self.blocos.clear()
+        self.blocs.clear()
         self.tape.clear()
         self.prevsBloc.clear()
 
@@ -80,9 +80,9 @@ class MTuring:
     """
 
     def remove_items(self):
-        while len(self.prevsState) > 0 and self.prevsState[len(self.prevsState) - 1] != '#':
+        while len(self.prevsState) > 0 and self.prevsState[-1] != '#':
             self.prevsState.pop()
-        if len(self.prevsState) > 0 and self.prevsState[len(self.prevsState) - 1] == '#':
+        if len(self.prevsState) > 0 and self.prevsState[-1] == '#':
             self.prevsState.pop()
 
     """
@@ -95,7 +95,7 @@ class MTuring:
     def Bloc(self, trans):
         self.insertBlocList(self.tape, self.tapehead)
         if self.check is not None and self.check not in self.prevsBloc:
-            self.estadoAtual = None
+            self.current_state = None
             self.prevsBloc.clear()
             self.prevsState.clear()
             return
@@ -104,21 +104,21 @@ class MTuring:
                 self.check = trans[1]
                 self.prevsState.append(trans[0])
                 self.aux = self.prevsState[-1]
-                self.estadoAtual = '01'
+                self.current_state = '01'
                 self.prevsBloc.append(trans[1])
-                self.blocoAtual = self.prevsBloc[-1]
+                self.current_bloc = self.prevsBloc[-1]
                 self.prevsState.append('#')
                 self.FTransition()
             else:
-                self.estadoAtual = '01'
+                self.current_state = '01'
                 self.prevsState.append(trans[2])
                 self.aux = self.prevsState[-1]
-                self.blocoAtual = trans[1]
+                self.current_bloc = trans[1]
                 self.prevsState.append('#')
                 self.FTransition()
         else:
             if trans[5] == self.keywords[0]:  # encontrou o retorne.
-                self.estadoAtual = self.prevsState[-1]
+                self.current_state = self.prevsState[-1]
                 self.FTransition()
             else:
                 self.FTransition()
@@ -131,51 +131,50 @@ class MTuring:
 
     def FTransition(self):
         # INSERE BLOCO NA LISTA DE ANTERIORES
-        if len(self.prevsBloc) == 0 or self.blocoAtual != self.prevsBloc[-1]:
-            self.prevsBloc.append(self.blocoAtual)
-
+        if len(self.prevsBloc) == 0 or self.current_bloc != self.prevsBloc[-1]:
+            self.prevsBloc.append(self.current_bloc)
         # INSERE ESTADO NA LISTA DE ANTERIORES
-        if len(self.prevsState) > 0 and self.estadoAtual != self.prevsState[-1]:
-            self.prevsState.append(self.estadoAtual)
+        if len(self.prevsState) > 0 and self.current_state != self.prevsState[-1]:
+            self.prevsState.append(self.current_state)
 
         self.insertBlocList(self.tape, self.tapehead)
 
         # PERCORRE O BLOCO ATUAL PARA ACHAR A TRANSIÇÃO
-        for x in self.blocos[self.blocoAtual]:
+        for x in self.blocs[self.current_bloc]:
             if self.check is not None and self.check not in self.prevsBloc:
-                self.estadoAtual = None
+                self.current_state = None
                 self.prevsBloc.clear()
                 self.prevsState.clear()
                 break
 
-            if len(x) == 3 and x[0] == self.estadoAtual:
+            if len(x) == 3 and x[0] == self.current_state:
                 self.Bloc(x)
-            if x[0] == self.estadoAtual:
+            if x[0] == self.current_state:
                 if self.tapehead < 0 or self.tapehead >= len(self.tape):
                     self.swInTape(x)  # altera na fita
                     self.moveTapeH(x)  # move cabeçote
                     if x[5] == self.keywords[0]:  # RETORNA
-                        self.estadoAtual = self.aux
+                        self.current_state = self.aux
                         self.remove_items()
                         self.prevsBloc.pop()
-                        self.blocoAtual = self.prevsBloc[-1]
+                        self.current_bloc = self.prevsBloc[-1]
                     else:
                         self.prevsState.append(x[0])
-                        self.estadoAtual = x[5]
+                        self.current_state = x[5]
                     self.Bloc(x)
                 elif x[1] == self.tape[self.tapehead] or x[1] == '*':
                     self.swInTape(x)  # altera na fita
                     self.moveTapeH(x)  # move cabeçote
                     if x[5] == self.keywords[0]:  # RETORNA
-                        self.estadoAtual = self.aux
+                        self.current_state = self.aux
                         if len(self.prevsBloc) > 1:
-                            self.prevsBloc.remove(self.blocoAtual)
+                            self.prevsBloc.remove(self.current_bloc)
                         self.remove_items()
-                        self.blocoAtual = self.prevsBloc[-1]
+                        self.current_bloc = self.prevsBloc[-1]
                         self.Bloc(x)
                     else:
                         self.prevsState.append(x[0])
-                        self.estadoAtual = x[5]
+                        self.current_state = x[5]
                     break
         if self.proxTrans() is not None:
             self.Bloc(self.proxTrans())
@@ -186,10 +185,10 @@ class MTuring:
     " @:return None.
     """
     def proxTrans(self):
-        for x in self.blocos[self.blocoAtual]:
-            if len(x) == 3 and x[0] == self.estadoAtual:
+        for x in self.blocs[self.current_bloc]:
+            if len(x) == 3 and x[0] == self.current_state:
                 return x
-            elif x[0] == self.estadoAtual and ((self.tapehead < 0 or self.tapehead >= len(self.tape)) or (
+            elif x[0] == self.current_state and ((self.tapehead < 0 or self.tapehead >= len(self.tape)) or (
                     x[1] == self.tape[self.tapehead] or x[1] == '*')):
                 return x
 
@@ -203,12 +202,21 @@ class MTuring:
 
     def swInTape(self, trans):  # altera na fita
         symbol = trans[3]
+        symbol_2 = trans[1]
         if symbol == '*':
             if self.tapehead < 0:
-                self.tape.insert(0, '_')
+                self.tape.insert(0, symbol_2)
                 self.tapehead = 0
             elif self.tapehead >= len(self.tape):
-                self.tape.append('_')
+                self.tape.append(symbol_2)
+        elif symbol == '_':
+            if self.tapehead < 0:
+                self.tape.insert(0, symbol_2)
+                self.tapehead = 0
+            elif self.tapehead >= len(self.tape):
+                self.tape.append(symbol_2)
+            else:
+                self.tape[self.tapehead] = symbol
         else:
             if self.tapehead < 0:
                 self.tape.insert(0, symbol)
@@ -228,7 +236,7 @@ class MTuring:
 
     def insertBlocList(self, tape, tapehead):
         w = "".join(tape)
-        y = (self.blocoAtual, self.estadoAtual, w, tapehead)
+        y = (self.current_bloc, self.current_state, w, tapehead)
         if not self.Output or y != self.Output[-1]:
             self.Output.append(y)
 
