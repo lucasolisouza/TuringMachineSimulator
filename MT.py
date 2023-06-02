@@ -167,8 +167,7 @@ class MTuring:
                     self.moveTapeH(x)  # move cabeçote
                     if x[5] == self.keywords[0]:  # RETORNA
                         self.current_state = self.aux
-                        if len(self.prevsBloc) > 1:
-                            self.prevsBloc.remove(self.current_bloc)
+                        self.prevsBloc.pop()
                         self.remove_items()
                         self.current_bloc = self.prevsBloc[-1]
                         self.Bloc(x)
@@ -184,6 +183,7 @@ class MTuring:
     " @:param None.
     " @:return None.
     """
+
     def proxTrans(self):
         for x in self.blocs[self.current_bloc]:
             if len(x) == 3 and x[0] == self.current_state:
@@ -191,8 +191,6 @@ class MTuring:
             elif x[0] == self.current_state and ((self.tapehead < 0 or self.tapehead >= len(self.tape)) or (
                     x[1] == self.tape[self.tapehead] or x[1] == '*')):
                 return x
-
-
 
     """
     " Função responsável por alterar a fita da máquina.
@@ -301,7 +299,6 @@ Nº      Bloco                 Estado Atual            Fita
         ]
         print(output.format(saida='\n'.join(saida)))
         self.Output.clear()
-
 
     """
     " Função responsável por receber a palavra que será inserida na fita.
